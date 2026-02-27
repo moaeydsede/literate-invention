@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.uid == "31ZskJ12hdNhy5D5lwP6dPB5Kw92"; }
+
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /cashboxes/{cashboxId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+
+      match /transactions/{txId} {
+        allow read: if signedIn();
+        allow create, update, delete: if isAdmin();
+      }
+
+      match /meta/{docId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+    }
+
+    match /cheques/{chequeId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
