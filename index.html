@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>CashBoxes Pro</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="splash">
+      <div class="brand">
+        <img src="icon-192.png" alt="" class="brand__logo" />
+        <div class="brand__title">CashBoxes Pro</div>
+        <div class="brand__sub">Loading…</div>
+      </div>
+      <div class="muted">v7 • PWA • Firebase • Cloudinary</div>
+    </div>
+  </div>
+  
+
+<script type="module">
+  const APP_URL = "./app.js?v=7";
+  const root = document.querySelector("#app");
+  const showLoaderError = async (err) => {
+    console.error("App load failed:", err);
+    root.innerHTML = `
+      <div class="splash">
+        <div class="brand">
+          <img src="icon-192.png" alt="" class="brand__logo" />
+          <div class="brand__title">CashBoxes Pro</div>
+          <div class="brand__sub">حدث خطأ أثناء تحميل التطبيق</div>
+        </div>
+        <div class="card" style="width:min(560px,100%); text-align:right">
+          <div class="card__bd">
+            <div class="title" style="font-size:16px">السبب المحتمل</div>
+            <div class="small" style="margin-top:6px">
+              غالباً بسبب: كاش قديم (Service Worker) أو خطأ Syntax في app.js.
+            </div>
+            <div class="sep"></div>
+            <div class="small" style="direction:ltr; text-align:left; white-space:pre-wrap; overflow:auto; max-height:120px; border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:10px">
+${"${(err && (err.stack || err.message)) ? (err.stack || err.message) : String(err)}"}
+            </div>
+            <div class="sep"></div>
+            <div class="hstack">
+              <button class="btn btn--primary" id="btn-retry">إعادة المحاولة</button>
+              <button class="btn" id="btn-clear">مسح الكاش + إلغاء SW</button>
+            </div>
+            <div class="small" style="margin-top:10px">
+              بعد مسح الكاش، افتح الصفحة مرة أخرى (أو Incognito).
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.querySelector("#btn-retry")?.addEventListener("click", ()=> location.reload());
+    document.querySelector("#btn-clear")?.addEventListener("click", async ()=>{
+      try{
+        if("serviceWorker" in navigator){
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r=> r.unregister()));
+        }
+        if("caches" in window){
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k=> caches.delete(k)));
+        }
+        alert("تم مسح الكاش وإلغاء Service Worker. أعد تحميل الصفحة.");
+      }catch(e){
+        console.error(e);
+        alert("تعذر مسح الكاش تلقائياً. امسح Site data من المتصفح.");
+      }
+    });
+  };
+
+  try{
+    await import(APP_URL);
+  }catch(err){
+    await showLoaderError(err);
+  }
+</script>
+
+</body>
+</html>
