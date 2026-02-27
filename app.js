@@ -159,7 +159,7 @@ async function uploadChequeImageToCloudinary(file, onProgress){
     };
     xhr.onerror = ()=> reject(new Error("Network error"));
     xhr.send(fd);
-  });
+  })
 
   const secureUrl = res.secure_url || res.url;
   if(!secureUrl) throw new Error("No URL returned from Cloudinary");
