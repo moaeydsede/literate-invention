@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+
+    function validString(field, max) { return field is string && field.size() > 0 && field.size() <= max; }
+    function validOptString(field, max) { return !(field in request.resource.data) || (field is string && field.size() <= max); }
+    function validAmount(amount) { return amount is number && amount >= 0; }
+    function validDate(date) { return date is timestamp; }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /settings/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /boxes/{boxId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && validString(request.resource.data.name, 60)
+          && validOptString("title", 120);
+        allow delete: if isOwner(userId);
+      }
+
+      match /transactions/{txId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && validString(request.resource.data.boxId, 80)
+          && validString(request.resource.data.boxName, 60)
+          && validString(request.resource.data.type, 10)
+          && validAmount(request.resource.data.amount)
+          && validString(request.resource.data.account, 60)
+          && validOptString("note", 500)
+          && validDate(request.resource.data.date)
+          && (!("photoUrl" in request.resource.data) || request.resource.data.photoUrl is string)
+          && (!("photoId" in request.resource.data) || request.resource.data.photoId is string);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>CashBoxes Pro</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button class="iconbtn" id="menuBtn" aria-label="القائمة">☰</button>
+      <div class="brand">
+        <div class="logo">CB</div>
+        <div>
+          <div class="title">CashBoxes Pro</div>
+          <div class="subtitle">إدارة صناديق ومعاملات</div>
+        </div>
+      </div>
+      <button class="iconbtn" id="themeBtn" aria-label="الوضع الليلي">🌓</button>
+    </header>
+
+    <!-- Drawer -->
+    <div class="drawerOverlay hidden" id="drawerOverlay"></div>
+    <aside class="drawer hidden" id="drawer">
+      <div class="drawerHead">
+        <div class="drawerTitle">القائمة</div>
+        <button class="iconbtn" id="closeDrawerBtn" aria-label="إغلاق">✕</button>
+      </div>
+      <nav class="drawerNav">
+        <button class="navbtn active" data-route="home">الرئيسية</button>
+        <button class="navbtn" data-route="boxes">الصناديق</button>
+        <button class="navbtn" data-route="transactions">المعاملات</button>
+        <button class="navbtn" data-route="reports">التقارير</button>
+        <button class="navbtn" data-route="importExport">استيراد/تصدير</button>
+        <button class="navbtn" data-route="settings">الإعدادات</button>
+      </nav>
+      <div class="drawerFoot">
+        <div class="small" id="authStateText">غير مسجّل</div>
+        <button class="btn danger" id="logoutBtn">تسجيل الخروج</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <!-- Toast -->
+      <div class="toast hidden" id="toast"></div>
+
+      <!-- Screens -->
+      <section class="screen" id="screen-home">
+        <div class="grid2">
+          <div class="card">
+            <div class="cardHead">
+              <h2>ملخص اليوم</h2>
+              <span class="pill" id="todayPill">—</span>
+            </div>
+            <div class="kpis">
+              <div class="kpi">
+                <div class="kpiLabel">إجمالي الدخل</div>
+                <div class="kpiValue" id="kpiIncome">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">إجمالي المصروف</div>
+                <div class="kpiValue" id="kpiExpense">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">الصافي</div>
+                <div class="kpiValue" id="kpiNet">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardHead">
+              <h2>تسجيل الدخول</h2>
+              <span class="pill" id="authPill">—</span>
+            </div>
+            <div class="form">
+              <label>البريد</label>
+              <input id="email" inputmode="email" autocomplete="email" placeholder="مثال: Acc@cash.local" />
+              <label>كلمة المرور</label>
+              <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+              <button class="btn primary" id="loginBtn">دخول / إنشاء حساب</button>
+              <div class="small muted">
+                ملاحظة: يلزم تفعيل Email/Password في Firebase Authentication وإضافة نطاق GitHub ضمن Authorized domains.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <h2>الصناديق</h2>
+            <button class="btn" id="addBoxBtn">+ إضافة صندوق</button>
+          </div>
+          <div class="list" id="boxesList"></div>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="screen-boxes">
+        <div class="card">
+          <div class="cardHead">
+            <h2>إدارة الصناديق</h2>
+            <button class="btn" id="addBoxBtn2">+ إضافة صندوق</button>
+          </div>
+          <div class="list" id="boxesList2"></div>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="screen-transactions">
+        <div class="card">
+          <div class="cardHead">
+            <h2>المعاملات</h2>
+            <button class="btn primary" id="addTxBtn">+ إضافة معاملة</button>
+          </div>
+          <div class="filters">
+            <select id="boxFilter"></select>
+            <input type="date" id="fromDate" />
+            <input type="date" id="toDate" />
+            <button class="btn" id="applyTxFilter">تطبيق</button>
+          </div>
+          <div class="list" id="txList"></div>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="screen-reports">
+        <div class="grid2">
+          <div class="card">
+            <div class="cardHead">
+              <h2>تقرير شهري</h2>
+              <div class="row">
+                <input type="month" id="monthPicker" />
+                <button class="btn" id="runMonthly">تشغيل</button>
+              </div>
+            </div>
+            <canvas id="monthlyChart" height="180"></canvas>
+            <div class="small muted">الرسم البياني يعمل بدون أي مكتبات (Canvas).</div>
+          </div>
+          <div class="card">
+            <div class="cardHead">
+              <h2>أفضل الحسابات</h2>
+              <button class="btn" id="runTopAccounts">تحديث</button>
+            </div>
+            <div class="list" id="topAccountsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="screen-importExport">
+        <div class="card">
+          <div class="cardHead">
+            <h2>استيراد / تصدير Excel</h2>
+          </div>
+          <div class="grid2">
+            <div>
+              <h3 class="h3">تصدير</h3>
+              <div class="small muted">سيصدر معاملات المستخدم حسب الفلاتر الحالية.</div>
+              <button class="btn" id="exportXlsxBtn">تصدير XLSX</button>
+              <button class="btn" id="exportCsvBtn">تصدير CSV</button>
+            </div>
+            <div>
+              <h3 class="h3">استيراد</h3>
+              <div class="small muted">الملف يجب أن يحتوي أعمدة: date,type,amount,account,note,boxName</div>
+              <input type="file" id="importFile" accept=".xlsx,.csv" />
+              <button class="btn primary" id="importBtn">استيراد</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="screen-settings">
+        <div class="card">
+          <div class="cardHead">
+            <h2>الإعدادات</h2>
+          </div>
+          <div class="form">
+            <label>العملة</label>
+            <input id="currencyInput" placeholder="مثال: EGP" />
+            <label>Cloudinary Cloud Name</label>
+            <input id="cloudNameInput" placeholder="dthtzvypx" />
+            <label>Cloudinary Upload Preset (Unsigned)</label>
+            <input id="presetInput" placeholder="Joodkids" />
+            <button class="btn" id="saveSettingsBtn">حفظ</button>
+            <div class="small muted">ترتبط الإعدادات بحسابك (Firestore).</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <h2>رفع صورة (تجربة)</h2>
+          </div>
+          <input type="file" id="photoFile" accept="image/*" />
+          <button class="btn primary" id="uploadPhotoBtn">رفع إلى Cloudinary</button>
+          <div class="small muted" id="photoResult"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Nav (mobile) -->
+    <nav class="bottomNav">
+      <button class="tab active" data-route="home">الرئيسية</button>
+      <button class="tab" data-route="transactions">المعاملات</button>
+      <button class="tab" data-route="reports">تقارير</button>
+      <button class="tab" data-route="settings">إعدادات</button>
+    </nav>
+
+    <!-- Modals -->
+    <div class="modalOverlay hidden" id="modalOverlay"></div>
+
+    <div class="modal hidden" id="boxModal">
+      <div class="modalHead">
+        <div class="modalTitle" id="boxModalTitle">إضافة صندوق</div>
+        <button class="iconbtn" data-close="boxModal">✕</button>
+      </div>
+      <div class="form">
+        <label>اسم الصندوق</label>
+        <input id="boxName" placeholder="مثال: صندوق المبيعات" />
+        <label>عنوان/وصف</label>
+        <input id="boxTitle" placeholder="مثال: الفرع الرئيسي" />
+        <button class="btn primary" id="saveBoxBtn">حفظ</button>
+      </div>
+    </div>
+
+    <div class="modal hidden" id="txModal">
+      <div class="modalHead">
+        <div class="modalTitle" id="txModalTitle">إضافة معاملة</div>
+        <button class="iconbtn" data-close="txModal">✕</button>
+      </div>
+      <div class="form">
+        <label>الصندوق</label>
+        <select id="txBox"></select>
+        <label>النوع</label>
+        <select id="txType">
+          <option value="income">دخل</option>
+          <option value="expense">مصروف</option>
+        </select>
+        <label>المبلغ</label>
+        <input id="txAmount" inputmode="decimal" placeholder="0" />
+        <label>اسم الحساب</label>
+        <input id="txAccount" placeholder="مثال: مورد / عميل / مصروفات" />
+        <label>ملاحظة</label>
+        <input id="txNote" placeholder="اختياري" />
+        <label>التاريخ</label>
+        <input id="txDate" type="date" />
+        <div class="row">
+          <button class="btn primary" id="saveTxBtn">حفظ</button>
+          <button class="btn danger" id="deleteTxBtn">حذف</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal hidden" id="statementModal">
+      <div class="modalHead">
+        <div class="modalTitle">كشف حساب الصندوق</div>
+        <button class="iconbtn" data-close="statementModal">✕</button>
+      </div>
+      <div class="form">
+        <label>تحديد اليوم (لحساب الرصيد الافتتاحي)</label>
+        <input id="statementDay" type="date" />
+        <button class="btn" id="runStatementBtn">عرض</button>
+        <div class="statementSummary">
+          <div class="pill">الرصيد الافتتاحي: <span id="openingBal">0</span></div>
+          <div class="pill">الدخل: <span id="stIncome">0</span></div>
+          <div class="pill">المصروف: <span id="stExpense">0</span></div>
+          <div class="pill">الرصيد الختامي: <span id="closingBal">0</span></div>
+        </div>
+      </div>
+      <div class="list" id="statementList"></div>
+    </div>
+
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+  </script>
+
+  <!-- SheetJS for XLSX -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+</body>
+</html>
